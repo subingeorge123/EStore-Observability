@@ -1,6 +1,6 @@
 # EStore - E-Commerce Microservices Demo
 
-A proof-of-concept e-commerce application built with **React** frontend and **Flask** microservices, all running in Docker containers.
+E-commerce application built with **React** frontend and **Flask** microservices, all running in Docker containers.
 
 ## Architecture
 
@@ -92,10 +92,4 @@ The Docker Compose tracing strategy is controlled from one file:
 observability/tracing-config.env
 ```
 
-Set `TRACING_MODE` to one of `NONE`, `HEAD`, `PROBABILISTIC`, or `TAIL`, then restart the stack:
-
-```bash
-docker compose up -d --build
-```
-
-See `observability/README-tracing-sampling.md` for the full experiment workflow and mode behavior.
+Set `TRACING_MODE` to one of `NONE`, `HEAD`, `PROBABILISTIC`, or `TAIL`
