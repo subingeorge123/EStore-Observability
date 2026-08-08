@@ -48,10 +48,10 @@ data:
           - name: successful-trace-sample
             type: probabilistic
             probabilistic:
-              sampling_percentage: 100
+              sampling_percentage: 10
       batch:
     
-    service:
+    service:  
       pipelines:
         traces/spanmetrics:
           receivers: [otlp]

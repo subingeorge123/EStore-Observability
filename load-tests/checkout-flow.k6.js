@@ -10,10 +10,8 @@ const baseUrl = __ENV.BASE_URL.replace(/\/$/, "");
 const scenarioName = (__ENV.SCENARIO || "steady").toLowerCase();
 const sleepSeconds = Number(__ENV.SLEEP_SECONDS || "1");
 
-const users = [
-  { username: "demo", password: "demo123" },
-  { username: "user1", password: "pass123" },
-];
+const TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiZGVtbyIsImV4cCI6MTc4NjE1NDA1MH0.BxQqAW99ZozF0Zvy1-71S4gh6kgwGhsALIYS0onk-2g";
 
 const products = [
   { name: "Laptop", price: 999 },
@@ -32,18 +30,18 @@ const scenarioProfiles = {
     checkout_flow: {
       executor: "constant-vus",
       vus: Number(__ENV.VUS || "5"),
-      duration: __ENV.DURATION || "5m",
+      duration: __ENV.DURATION || "3m",
     },
   },
   spike: {
     checkout_flow: {
       executor: "ramping-vus",
       stages: [
-        { duration: __ENV.WARMUP_DURATION || "1m", target: Number(__ENV.BASE_VUS || "5") },
-        { duration: __ENV.SPIKE_RAMP_DURATION || "30s", target: Number(__ENV.SPIKE_VUS || "50") },
-        { duration: __ENV.SPIKE_HOLD_DURATION || "2m", target: Number(__ENV.SPIKE_VUS || "50") },
+        { duration: __ENV.WARMUP_DURATION || "30s", target: Number(__ENV.BASE_VUS || "5") },
+        { duration: __ENV.SPIKE_RAMP_DURATION || "30s", target: Number(__ENV.SPIKE_VUS || "20") },
+        { duration: __ENV.SPIKE_HOLD_DURATION || "1m", target: Number(__ENV.SPIKE_VUS || "20") },
         { duration: __ENV.RECOVERY_DURATION || "30s", target: Number(__ENV.BASE_VUS || "5") },
-        { duration: __ENV.COOLDOWN_DURATION || "1m", target: Number(__ENV.BASE_VUS || "5") },
+        { duration: __ENV.COOLDOWN_DURATION || "30s", target: Number(__ENV.BASE_VUS || "5") },
         { duration: "10s", target: 0 },
       ],
     },
@@ -52,8 +50,8 @@ const scenarioProfiles = {
     checkout_flow: {
       executor: "ramping-vus",
       stages: [
-        { duration: __ENV.RAMP_UP_DURATION || "5m", target: Number(__ENV.PEAK_VUS || "50") },
-        { duration: __ENV.PEAK_DURATION || "3m", target: Number(__ENV.PEAK_VUS || "50") },
+        { duration: __ENV.RAMP_UP_DURATION || "3m", target: Number(__ENV.PEAK_VUS || "50") },
+        { duration: __ENV.PEAK_DURATION || "2m", target: Number(__ENV.PEAK_VUS || "50") },
         { duration: __ENV.RAMP_DOWN_DURATION || "2m", target: 0 },
       ],
     },
@@ -74,45 +72,25 @@ export const options = {
 };
 
 export default function () {
-  const user = users[Math.floor(Math.random() * users.length)];
-
-  const loginRes = http.post(
-    `${baseUrl}/api/auth/login`,
-    JSON.stringify(user),
-    {
-      headers: { "Content-Type": "application/json" },
-      tags: { step: "login" },
-    }
-  );
-
-  const loginOk = check(loginRes, {
-    "login status is 200": (r) => r.status === 200,
-    "login returns token": (r) => Boolean(r.json("token")),
-  });
-
-  if (!loginOk) {
-    checkoutFailures.add(1);
-    sleep(sleepSeconds);
-    return;
-  }
-
   const order = randomOrder();
   const startedAt = Date.now();
-  const orderRes = http.post(
+  const res = http.post(
     `${baseUrl}/api/auth/place-order`,
     JSON.stringify(order),
     {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${loginRes.json("token")}`,
+        Authorization: `Bearer ${TOKEN}`,
       },
-      tags: { step: "place_order" },
+      tags: {
+        endpoint: "place-order",
+      },
     }
   );
   checkoutDuration.add(Date.now() - startedAt);
 
-  const orderOk = check(orderRes, {
-    "order status is 200": (r) => r.status === 200,
+  const orderOk = check(res, {
+   "order status is 200": (r) => r.status === 200,
     "order completed": (r) => r.json("status") === "success",
     "order has id": (r) => Boolean(r.json("order_id")),
   });
